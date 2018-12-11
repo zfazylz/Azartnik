@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if user.is_authenticated %}
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                    <p>You are logged as <span id="username">{{ username }}</span></p>
+                    {#                    <p>You have <span id="userBalance">{{ userBalance }}</span></p>#}
+                </div>
+                <br>
+                <form>
+                    {% csrf_token %}
+                </form>
+                <div class="" id="betsList">
+                    {% for singleBet in betHistory reversed %}
+
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-md-1 betID">{{ singleBet.id }}</div>
+                                <div class="col-md-4 betName">{{ singleBet.bet.name }}</div>
+                                <div class="col-md-1 betCoefficient">{{ singleBet.coefficient }}</div>
+                                <div class="col-md-2 betSide">
+                                    {% if singleBet.side == 1 %}
+                                        W1
+                                    {% elif singleBet.side == 2 %}
+                                        W2
+                                    {% elif singleBet.side == 0 %}
+                                        DRAW
+                                    {% else %}
+                                        NONE
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-2 betValue">{{ singleBet.betValue }}</div>
+                                <div class="col-md-2 betResult">
+                                    {% if singleBet.status == 1 %}
+                                        WIN: {{ singleBet.winValue }}
+                                    {% elif singleBet.status == 2 %}
+                                        LOOSE: -{{ singleBet.betValue }}
+                                    {% else %}
+                                        playing
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <a href="/">login</a>
+    {% endif %}
+{% endblock %}

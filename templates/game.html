@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if user.is_authenticated %}
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                    <p>You are logged as <span id="username">{{ username }}</span></p>
+                    <p>You have <span id="userBalance">{{ userBalance }}</span></p>
+                    {% if user.is_authenticated %}
+                        <form method="post" action="{% url 'makeBet' %}" onSubmit="window.location.reload();">
+                            {% csrf_token %}
+                            <input type="number" id="betValue" min="10" value="{{ lastBet }}"
+                                   placeholder="Bet value" required>
+                        </form>
+                    {% endif %}
+                </div>
+                <br>
+                <div class="" id="betsList">
+                    {% for singleBet in betsList %}
+                        <div class="col-sm-12">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-sm-1 col-xs-1"> {{ singleBet.0 }} </div>
+                                    <div class="col-sm-5 col-xs-5"> {{ singleBet.1 }} </div>
+                                    <div class="col-sm-6 col-xs-6">
+                                        <div class="container">
+                                            <div class="row">
+
+                                                <div class="col-sm-4"><a href=""
+                                                                         onclick="return makeBet({{ singleBet.0 }}, 1)"> {{ singleBet.2 }} </a>
+                                                </div>
+                                                <div class="col-sm-4"><a href=""
+                                                                         onclick="return makeBet({{ singleBet.0 }}, 0)"> {{ singleBet.3 }} </a>
+                                                </div>
+                                                <div class="col-sm-4"><a href=""
+                                                                         onclick="return makeBet({{ singleBet.0 }}, 2)"> {{ singleBet.4 }} </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <script
+                src="https://code.jquery.com/jquery-3.3.1.min.js"
+                integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+                crossorigin="anonymous"></script>
+        <script>
+            function getCookie(name) {
+                var cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = jQuery.trim(cookies[i]);
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            var csrftoken = getCookie('csrftoken');
+
+            // Setup ajax connections safetly
+
+            function csrfSafeMethod(method) {
+                return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+            }
+
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                }
+            });
+            $(function () {
+                setInterval(function () {
+                    $.ajax({
+                        type: "POST",
+                        url: "/game/",
+                        data: {
+                            csrfmiddlewaretoken: $('[name="csrfmiddlewaretoken" ]').val(),
+                        },
+                        success: function (response) {
+                            $("#userBalance").html(response['userBalance']);
+
+                            var betsList = response['betsList'];
+                            var betListHTML = "";
+                            $.each(betsList, function (index, value) {
+                                betListHTML +=
+                                    "<div class=\"col-sm-12\">\n" +
+                                    "<div class=\"container\">\n" +
+                                    "<div class=\"row\">" +
+                                    "<div class=\"col-sm-1\"> " + value[0] + " </div>\n" +
+                                    "<div class=\"col-sm-5\">" + value[1] + "</div>\n" +
+                                    "<div class=\"col-sm-6\"> " +
+                                    "<div class=\"container\">\n" +
+                                    "<div class=\"row\">\n" +
+                                    "<div class=\"col-sm-4\"> <a href=\"\" onclick=\"return makeBet(" + value[0] + ", 1)\">" + value[2] + " <a/></div>\n" +
+                                    "<div class=\"col-sm-4\"> <a href=\"\" onclick=\"return makeBet(" + value[0] + ", 0)\">" + value[3] + " <a/></div>\n" +
+                                    "<div class=\"col-sm-4\"> <a href=\"\" onclick=\"return makeBet(" + value[0] + ", 2)\">" + value[4] + " <a/></div>\n" +
+                                    "</div>\n" +
+                                    "</div>" + "</div>\n" +
+                                    "</div>" + "</div>\n" +
+                                    "</div>"
+                            });
+                            $("#betsList ").html(betListHTML);
+
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            alert('Try to refresh the page');
+                        }
+                    });
+                }, 5000);
+            });
+
+            function makeBet(betID, res) {
+                $.ajax({
+                    type: "POST",
+                    url: "/makeBet/",
+                    data: {
+                        csrfmiddlewaretoken: $('[name="csrfmiddlewaretoken" ]').val(),
+                        betValue: $("#betValue").val(),
+                        betID: String(betID),
+                        res: String(res),
+                    },
+                    success: function (response) {
+                        alert('Done!')
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        alert('Try to refresh the page');
+                    }
+                })
+            };
+        </script>
+    {% else %}
+        <a href="/">login</a>
+    {% endif %}
+{% endblock %}
